@@ -101,7 +101,7 @@ class FZPortProxyApp(ctk.CTk):
         admin_badge.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 
         # 2. Main Tabview
-        self.tabview = ctk.CTkTabview(self, segment_button_width_medium=True)
+        self.tabview = ctk.CTkTabview(self)
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=15, pady=10)
 
         self.tab_rules = self.tabview.add("Port Forwards")

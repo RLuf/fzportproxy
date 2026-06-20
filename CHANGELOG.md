@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 - Configured run artifact uploading in GitHub Actions to retrieve the built executable from manual workflow runs.
 - Updated documentation with step-by-step instructions for publishing releases.
 
+### Fixed
+- Fixed startup crash due to unsupported `segment_button_width_medium` argument during `CTkTabview` initialization in `gui.py`.
+- Replaced console-blocking `input()` with a graphical `tkinter.messagebox` in `main.py` when handling startup errors in windowed/non-console mode.
+
 ## [0.1.0] - 2026-06-20
 ### Added
 - Project initialization.

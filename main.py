@@ -15,7 +15,11 @@ def main():
         app.mainloop()
     except Exception as e:
         print(f"Failed to start application: {e}")
-        input("Press Enter to exit...")
+        try:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", f"Failed to start application: {e}")
+        except:
+            pass
 
 if __name__ == "__main__":
     main()
