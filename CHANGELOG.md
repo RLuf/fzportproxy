@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-20
+### Fixed
+- **Critical: Fixed startup crash** (`bad event type or keysym "StateChanged"`). The `<StateChanged>` event does not exist in Tkinter/Tcl — replaced with the standard `<Unmap>` event for system tray minimization detection.
+- **Fixed missing `import re`** in `gui.py` that could cause crashes when validating IP addresses or hostnames.
+
+### Changed
+- **Migrated compiler from PyInstaller to Nuitka**. Nuitka compiles Python to native C code, producing real machine-code binaries instead of self-extracting archives. This drastically reduces Windows Defender and antivirus false positive detections.
+- **Centralized version management** into a new `version.py` module. All files (`gui.py`, `installer.py`, `build.py`) now reference `APP_VERSION` from a single source.
+- **Versioned binary filenames**: Compiled executables are now named `fzportproxy_v1.1.0.exe` and `setup_fzportproxy_v1.1.0.exe` instead of generic names.
+- **Updated `build.py`**: Complete rewrite to use Nuitka with auto-detection of MinGW64 or MSVC compiler backend.
+- **Updated `requirements.txt`**: Replaced `pyinstaller` with `nuitka` and `ordered-set`.
+- **Updated GitHub Actions** (`release.yml`): CI now uses Nuitka with MSVC via `ilammy/msvc-dev-cmd@v1` action and uploads versioned binaries.
+
+### Added
+- **`version.py`**: New centralized module containing `APP_VERSION`, `APP_NAME`, `APP_AUTHOR`, and `APP_WEBSITE`.
+- **`sign.py`**: New code signing script that auto-generates a self-signed certificate (`CN=FZPortProxy, O=Webstorage`) via PowerShell and signs executables using `signtool.exe`. Includes timestamping via DigiCert for long-term validity.
+- **Installer versioning**: The setup wizard now displays the current version in the title and banner.
+
+### Removed
+- Removed `fzportproxy.spec` and `setup_fzportproxy.spec` (PyInstaller spec files, no longer needed).
+- Removed `pyinstaller` dependency.
+
 ## [1.0.0] - 2026-06-20
 ### Added
 - **System Tray Integration**: Added full system tray minimization support (via `pystray`). The application now hides to the system tray on close or minimization (with a configuration toggle in the settings tab).

@@ -6,6 +6,7 @@ import ctypes
 import tkinter as tk
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+from version import APP_VERSION, APP_NAME
 
 # Set theme
 ctk.set_appearance_mode("Dark")
@@ -32,7 +33,7 @@ class FZPortProxyInstaller(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("FZPortProxy Setup")
+        self.title(f"{APP_NAME} Setup v{APP_VERSION}")
         self.geometry("550x400")
         self.resizable(False, False)
 
@@ -50,7 +51,7 @@ class FZPortProxyInstaller(ctk.CTk):
         
         banner_lbl = ctk.CTkLabel(
             banner_frame, 
-            text="FZPortProxy Installation Setup", 
+            text=f"{APP_NAME} Installation Setup v{APP_VERSION}", 
             font=ctk.CTkFont(size=20, weight="bold"),
             text_color="#3b82f6"
         )
@@ -62,7 +63,7 @@ class FZPortProxyInstaller(ctk.CTk):
 
         intro_lbl = ctk.CTkLabel(
             body_frame,
-            text="This wizard will install FZPortProxy on your computer.\nFZPortProxy will manage your Windows Portproxies and WSL Hostname configurations.",
+            text=f"This wizard will install {APP_NAME} v{APP_VERSION} on your computer.\n{APP_NAME} will manage your Windows Portproxies and WSL Hostname configurations.",
             justify="left",
             anchor="w"
         )

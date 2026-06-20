@@ -4,3 +4,6 @@ build/
 dist/
 *.spec
 config.json
+.codesign/
+*.build/
+*.onefile-build/

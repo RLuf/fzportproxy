@@ -5,10 +5,12 @@ import threading
 import time
 import json
 import os
+import re
 import subprocess
 import pystray
 from PIL import Image, ImageDraw
 from tkinter import messagebox
+from version import APP_VERSION, APP_NAME, APP_AUTHOR, APP_WEBSITE
 
 # Set theme
 ctk.set_appearance_mode("Dark")
@@ -20,7 +22,7 @@ class FZPortProxyApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("FZPortProxy - WSL Port Forwarding & Hostname Manager")
+        self.title(f"{APP_NAME} v{APP_VERSION} - WSL Port Forwarding & Hostname Manager")
         self.geometry("900x650")
         self.resizable(True, True)
 
@@ -47,7 +49,7 @@ class FZPortProxyApp(ctk.CTk):
 
         # Tray and Window Close Setup
         self.tray_icon = None
-        self.bind("<StateChanged>", self.on_state_change)
+        self.bind("<Unmap>", self.on_state_change)
         self.protocol("WM_DELETE_WINDOW", self.on_window_close)
         self.setup_tray_icon()
 
@@ -777,7 +779,8 @@ class FZPortProxyApp(ctk.CTk):
             self.log_message(f"Failed to start system tray: {e}")
 
     def on_state_change(self, event=None):
-        if self.state() == "iconic":
+        # Only act when the main window itself is minimized (iconic)
+        if event and event.widget == self and self.state() == "iconic":
             self.withdraw()
             self.log_message("Minimized to system tray.")
 
@@ -825,8 +828,8 @@ class FZPortProxyApp(ctk.CTk):
         help_txt = ctk.CTkTextbox(tab_help, wrap="word")
         help_txt.pack(fill="both", expand=True, padx=10, pady=10)
         
-        help_content = """FZPortProxy - WSL Port Forwarding & Hostname Manager
-Version: 1.0.0
+        help_content = f"""{APP_NAME} - WSL Port Forwarding & Hostname Manager
+Version: {APP_VERSION}
 
 Quick Start Guide:
 
@@ -861,8 +864,8 @@ Important: This application MUST be run as Administrator because 'netsh', Window
         about_frame.pack(fill="both", expand=True, padx=10, pady=10)
         
         # Title
-        ctk.CTkLabel(about_frame, text="FZPortProxy v1.0.0", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=5)
-        ctk.CTkLabel(about_frame, text="Author: Roger Luft (VeilWalker)", font=ctk.CTkFont(weight="bold")).pack(anchor="w", pady=2)
+        ctk.CTkLabel(about_frame, text=f"{APP_NAME} v{APP_VERSION}", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=5)
+        ctk.CTkLabel(about_frame, text=f"Author: {APP_AUTHOR}", font=ctk.CTkFont(weight="bold")).pack(anchor="w", pady=2)
         
         # Site / Links
         def open_url(url):
