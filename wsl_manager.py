@@ -33,7 +33,7 @@ def list_wsl_distros():
     """
     try:
         # Run wsl -l -v. WSL output is typically UTF-16 on Windows.
-        result = subprocess.run(["wsl.exe", "--list", "--verbose"], capture_output=True, check=True)
+        result = subprocess.run(["wsl.exe", "--list", "--verbose"], capture_output=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW)
         
         # Try decoding as UTF-16, then UTF-8, then fallback to cp1252
         stdout_bytes = result.stdout
@@ -89,7 +89,8 @@ def get_wsl_ip(distro_name):
             ["wsl.exe", "-d", distro_name, "-e", "hostname", "-I"],
             capture_output=True,
             text=True,
-            errors="ignore"
+            errors="ignore",
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         if result.returncode == 0 and result.stdout.strip():
             ips = result.stdout.strip().split()
@@ -105,7 +106,8 @@ def get_wsl_ip(distro_name):
             ["wsl.exe", "-d", distro_name, "-e", "ip", "-4", "-o", "addr", "show", "eth0"],
             capture_output=True,
             text=True,
-            errors="ignore"
+            errors="ignore",
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         if result.returncode == 0 and result.stdout.strip():
             # e.g. "2: eth0    inet 172.21.139.123/20 ..."
@@ -118,7 +120,8 @@ def get_wsl_ip(distro_name):
             ["wsl.exe", "-d", distro_name, "-e", "ip", "-4", "-o", "addr", "show"],
             capture_output=True,
             text=True,
-            errors="ignore"
+            errors="ignore",
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         if result.returncode == 0:
             for line in result.stdout.splitlines():
@@ -144,7 +147,8 @@ def list_portproxy_rules():
             "netsh interface portproxy show all",
             capture_output=True,
             shell=True,
-            check=True
+            check=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
         # Try decoding as standard Windows console encoding (cp850 or cp1252 or utf-8)
         stdout_bytes = result.stdout
@@ -202,7 +206,7 @@ def add_portproxy_rule(listen_addr, listen_port, connect_addr, connect_port):
     """Add a netsh interface portproxy rule."""
     try:
         cmd = f"netsh interface portproxy add v4tov4 listenaddress={listen_addr} listenport={listen_port} connectaddress={connect_addr} connectport={connect_port}"
-        subprocess.run(cmd, shell=True, check=True, capture_output=True)
+        subprocess.run(cmd, shell=True, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
         return True
     except Exception as e:
         print(f"Error adding portproxy rule: {e}")
@@ -212,7 +216,7 @@ def delete_portproxy_rule(listen_addr, listen_port):
     """Delete a netsh interface portproxy rule."""
     try:
         cmd = f"netsh interface portproxy delete v4tov4 listenaddress={listen_addr} listenport={listen_port}"
-        subprocess.run(cmd, shell=True, check=True, capture_output=True)
+        subprocess.run(cmd, shell=True, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
         return True
     except Exception as e:
         print(f"Error deleting portproxy rule: {e}")
@@ -224,13 +228,13 @@ def manage_firewall_rule(port, action="add"):
     try:
         if action == "add":
             # First ensure no duplicate exists
-            subprocess.run(f'netsh advfirewall firewall delete rule name="{rule_name}"', shell=True, capture_output=True)
+            subprocess.run(f'netsh advfirewall firewall delete rule name="{rule_name}"', shell=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
             # Add new rule
             cmd = f'netsh advfirewall firewall add rule name="{rule_name}" dir=in action=allow protocol=TCP localport={port}'
-            subprocess.run(cmd, shell=True, check=True, capture_output=True)
+            subprocess.run(cmd, shell=True, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
         else:
             cmd = f'netsh advfirewall firewall delete rule name="{rule_name}"'
-            subprocess.run(cmd, shell=True, check=True, capture_output=True)
+            subprocess.run(cmd, shell=True, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
         return True
     except Exception as e:
         print(f"Error managing firewall rule: {e}")

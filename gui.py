@@ -5,6 +5,9 @@ import threading
 import time
 import json
 import os
+import subprocess
+import pystray
+from PIL import Image, ImageDraw
 from tkinter import messagebox
 
 # Set theme
@@ -42,11 +45,18 @@ class FZPortProxyApp(ctk.CTk):
         self.sync_thread = threading.Thread(target=self.bg_sync_loop, daemon=True)
         self.sync_thread.start()
 
+        # Tray and Window Close Setup
+        self.tray_icon = None
+        self.bind("<StateChanged>", self.on_state_change)
+        self.protocol("WM_DELETE_WINDOW", self.on_window_close)
+        self.setup_tray_icon()
+
     def load_config(self):
         default_config = {
             "auto_sync": True,
             "sync_interval": 10,
             "auto_firewall": True,
+            "minimize_to_tray_on_close": True,
             "dynamic_rules": [], # [{"listen_port": 8080, "distro": "Ubuntu-24.04", "connect_port": 80, "listen_addr": "0.0.0.0"}]
             "dynamic_hosts": {}  # {"app.wsl": "Ubuntu-24.04"}
         }
@@ -98,7 +108,19 @@ class FZPortProxyApp(ctk.CTk):
             text_color=admin_color,
             font=ctk.CTkFont(size=12, weight="bold")
         )
-        admin_badge.grid(row=0, column=1, padx=20, pady=10, sticky="e")
+        admin_badge.grid(row=0, column=1, padx=10, pady=10, sticky="e")
+
+        # Help & About Button
+        help_btn = ctk.CTkButton(
+            self.header_frame,
+            text="Help & About",
+            width=100,
+            height=28,
+            fg_color="#34495e",
+            hover_color="#2c3e50",
+            command=self.open_help_modal
+        )
+        help_btn.grid(row=0, column=2, padx=(10, 20), pady=10, sticky="e")
 
         # 2. Main Tabview
         self.tabview = ctk.CTkTabview(self)
@@ -293,9 +315,19 @@ class FZPortProxyApp(ctk.CTk):
         if self.config.get("auto_firewall", True):
             self.switch_auto_firewall.select()
 
-        # 4. Status message log
+        # 4. Minimize to tray switch
+        self.switch_minimize_to_tray = ctk.CTkSwitch(
+            settings_frame, 
+            text="Minimize to System Tray on close / minimize instead of exiting", 
+            command=self.toggle_minimize_to_tray
+        )
+        self.switch_minimize_to_tray.grid(row=4, column=0, padx=20, pady=10, sticky="w")
+        if self.config.get("minimize_to_tray_on_close", True):
+            self.switch_minimize_to_tray.select()
+
+        # 5. Status message log
         self.txt_status_logs = ctk.CTkTextbox(settings_frame, height=180)
-        self.txt_status_logs.grid(row=4, column=0, padx=20, pady=20, sticky="ew")
+        self.txt_status_logs.grid(row=5, column=0, padx=20, pady=20, sticky="ew")
         self.txt_status_logs.insert("0.0", "FZPortProxy initialized.\n")
         self.txt_status_logs.configure(state="disabled")
 
@@ -543,7 +575,7 @@ class FZPortProxyApp(ctk.CTk):
             if not target_ip:
                 # If IP could not be resolved, the distro might be stopped. Run a quick command to boot it.
                 try:
-                    subprocess.run(["wsl.exe", "-d", distro_name, "-e", "true"], capture_output=True)
+                    subprocess.run(["wsl.exe", "-d", distro_name, "-e", "true"], capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW)
                     target_ip = wm.get_wsl_ip(distro_name)
                 except:
                     pass
@@ -696,6 +728,178 @@ class FZPortProxyApp(ctk.CTk):
         self.save_config()
         self.log_message(f"Auto-Firewall enabled: {enabled}")
 
+    def toggle_minimize_to_tray(self):
+        enabled = self.switch_minimize_to_tray.get() != 0
+        self.config["minimize_to_tray_on_close"] = enabled
+        self.save_config()
+        self.log_message(f"Minimize to Tray on Close enabled: {enabled}")
+
+    # --- TRAY ICON & HELP MODAL IMPLEMENTATION ---
+    def create_tray_icon_image(self):
+        try:
+            img = Image.new('RGBA', (64, 64), color=(0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+            # Circular icon
+            draw.ellipse([4, 4, 60, 60], fill=(30, 41, 59)) # Slate background
+            draw.ellipse([8, 8, 56, 56], fill=(59, 130, 246)) # Blue circle
+            
+            # Connect two white nodes with a line and arrow head
+            draw.ellipse([14, 24, 26, 36], fill=(255, 255, 255)) # Left node
+            draw.ellipse([38, 24, 50, 36], fill=(255, 255, 255)) # Right node
+            draw.line([26, 30, 38, 30], fill=(255, 255, 255), width=3) # Connector line
+            draw.polygon([(34, 26), (38, 30), (34, 34)], fill=(255, 255, 255)) # Arrow head
+            return img
+        except Exception as e:
+            print(f"Error creating tray image: {e}")
+            return Image.new('RGB', (1, 1), color='blue')
+
+    def setup_tray_icon(self):
+        try:
+            def on_click(icon, item):
+                if str(item) == "Show":
+                    self.show_window_from_tray()
+                elif str(item) == "Exit":
+                    self.quit_app_entirely()
+
+            menu = pystray.Menu(
+                pystray.MenuItem('Show', on_click, default=True),
+                pystray.MenuItem('Exit', on_click)
+            )
+            
+            img = self.create_tray_icon_image()
+            self.tray_icon = pystray.Icon("fzportproxy", img, "FZPortProxy", menu)
+            
+            # Start tray in a background thread
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
+            self.log_message("System tray icon initialized.")
+        except Exception as e:
+            print(f"Error starting system tray: {e}")
+            self.log_message(f"Failed to start system tray: {e}")
+
+    def on_state_change(self, event=None):
+        if self.state() == "iconic":
+            self.withdraw()
+            self.log_message("Minimized to system tray.")
+
+    def on_window_close(self):
+        if self.config.get("minimize_to_tray_on_close", True):
+            self.withdraw()
+            self.log_message("Minimized to system tray.")
+        else:
+            self.quit_app_entirely()
+
+    def show_window_from_tray(self):
+        self.after(0, self.deiconify)
+        self.after(50, self.focus_force)
+        self.after(100, lambda: self.state("normal"))
+
+    def quit_app_entirely(self):
+        self.sync_thread_running = False
+        try:
+            if hasattr(self, "tray_icon") and self.tray_icon:
+                self.tray_icon.stop()
+        except:
+            pass
+        self.after(0, self.destroy)
+
+    def open_help_modal(self):
+        if hasattr(self, "help_win") and self.help_win.winfo_exists():
+            self.help_win.focus()
+            return
+            
+        self.help_win = ctk.CTkToplevel(self)
+        self.help_win.title("Help & About - FZPortProxy")
+        self.help_win.geometry("600x520")
+        self.help_win.resizable(False, False)
+        # Ensure it stays on top
+        self.help_win.after(200, lambda: self.help_win.attributes("-topmost", True))
+        
+        # Setup tabs inside the modal
+        tabview = ctk.CTkTabview(self.help_win)
+        tabview.pack(fill="both", expand=True, padx=15, pady=15)
+        
+        tab_help = tabview.add("Quick Help")
+        tab_about = tabview.add("About & Donate")
+        
+        # 1. Quick Help Tab
+        help_txt = ctk.CTkTextbox(tab_help, wrap="word")
+        help_txt.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        help_content = """FZPortProxy - WSL Port Forwarding & Hostname Manager
+Version: 1.0.0
+
+Quick Start Guide:
+
+1. Port Forwarding:
+   - Go to the 'Port Forwards' tab to create rules.
+   - You can add 'Static' rules (redirecting to a fixed IP) or 'WSL Dynamic' rules.
+   - Dynamic rules automatically query the current IP address of your selected WSL distribution.
+
+2. WSL Dynamic IP Syncing:
+   - WSL 2 virtual machines get a new dynamic IP address every time they boot.
+   - FZPortProxy solves this! It runs a background sync thread that polls WSL IPs.
+   - If an IP change is detected, it automatically deletes the outdated netsh port proxy and recreates it with the new IP.
+   - You can toggle this behavior and adjust the interval in the 'Settings' tab.
+
+3. Windows Firewall Integration:
+   - When adding a rule, FZPortProxy can automatically create a matching inbound rule in Windows Defender Firewall.
+   - This allows external traffic to reach your port forwarding rule.
+   - This option can be configured in the 'Settings' tab.
+
+4. Hostname Configuration:
+   - Want to access your WSL services using a friendly name like 'myproject.wsl' instead of '127.0.0.1'?
+   - Go to the 'Hosts Configuration' tab, assign a hostname to a WSL distro, and click Add.
+   - FZPortProxy will edit the Windows hosts file safely inside a dedicated block and automatically update the IP when WSL restarts.
+
+Important: This application MUST be run as Administrator because 'netsh', Windows Firewall, and the 'hosts' file require elevated privileges to modify system configurations.
+"""
+        help_txt.insert("1.0", help_content)
+        help_txt.configure(state="disabled")
+        
+        # 2. About & Donate Tab
+        about_frame = ctk.CTkScrollableFrame(tab_about)
+        about_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Title
+        ctk.CTkLabel(about_frame, text="FZPortProxy v1.0.0", font=ctk.CTkFont(size=18, weight="bold")).pack(anchor="w", pady=5)
+        ctk.CTkLabel(about_frame, text="Author: Roger Luft (VeilWalker)", font=ctk.CTkFont(weight="bold")).pack(anchor="w", pady=2)
+        
+        # Site / Links
+        def open_url(url):
+            import webbrowser
+            webbrowser.open(url)
+            
+        link_frame = ctk.CTkFrame(about_frame, fg_color="transparent")
+        link_frame.pack(fill="x", pady=10)
+        
+        ctk.CTkButton(link_frame, text="Webstorage Site", width=120, command=lambda: open_url("https://www.webstorage.com.br")).grid(row=0, column=0, padx=5, pady=5)
+        ctk.CTkButton(link_frame, text="Author Page", width=120, command=lambda: open_url("https://about.rogerluft.com.br")).grid(row=0, column=1, padx=5, pady=5)
+        ctk.CTkButton(link_frame, text="GitHub Profile", width=120, command=lambda: open_url("https://github.com/RLuf/")).grid(row=0, column=2, padx=5, pady=5)
+        
+        # Emails
+        email_frame = ctk.CTkFrame(about_frame)
+        email_frame.pack(fill="x", pady=10, padx=5)
+        ctk.CTkLabel(email_frame, text="Contact / Support Emails:", font=ctk.CTkFont(weight="bold")).pack(anchor="w", padx=10, pady=5)
+        ctk.CTkLabel(email_frame, text="• roger@webstorage.com.br\n• eu@rogerluft.com.br").pack(anchor="w", padx=20, pady=5)
+        
+        # Donate Section
+        donate_frame = ctk.CTkFrame(about_frame, border_color="#e74c3c", border_width=2, fg_color="#2c1e1e")
+        donate_frame.pack(fill="x", pady=15, padx=5)
+        
+        ctk.CTkLabel(donate_frame, text="Donate / Apoie o Projeto", font=ctk.CTkFont(size=14, weight="bold"), text_color="#e74c3c").pack(anchor="w", padx=15, pady=5)
+        ctk.CTkLabel(donate_frame, text="Se este utilitário te economizou tempo e facilitou seu desenvolvimento com WSL,\nconsidere fazer uma contribuição! Qualquer valor ajuda muito.", justify="left").pack(anchor="w", padx=15, pady=5)
+        
+        pix_key = "eu@rogerluft.com.br"
+        
+        def copy_pix():
+            self.clipboard_clear()
+            self.clipboard_append(pix_key)
+            self.update()
+            messagebox.showinfo("Pix Copiado", "Chave Pix copiada para a área de transferência:\neu@rogerluft.com.br")
+            
+        pix_btn = ctk.CTkButton(donate_frame, text="Copiar Chave Pix (E-mail)", fg_color="#e74c3c", hover_color="#c0392b", command=copy_pix)
+        pix_btn.pack(pady=10)
+
     def save_interval_action(self):
         val = self.entry_sync_interval.get().strip()
         if not val.isdigit() or int(val) < 2:
@@ -807,6 +1011,11 @@ class FZPortProxyApp(ctk.CTk):
     def destroy(self):
         # Stop background thread gracefully
         self.sync_thread_running = False
+        try:
+            if hasattr(self, "tray_icon") and self.tray_icon:
+                self.tray_icon.stop()
+        except:
+            pass
         super().destroy()
 
 if __name__ == "__main__":

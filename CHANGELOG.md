@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-06-20
+### Added
+- **System Tray Integration**: Added full system tray minimization support (via `pystray`). The application now hides to the system tray on close or minimization (with a configuration toggle in the settings tab).
+- **Custom Setup Installer**: Added a CustomTkinter-based installer (`installer.py`) that packages the standalone executable, prompts the user for the installation folder, and creates shortcuts including an option to start automatically with Windows (via user Startup directory).
+- **Branding & Help Tab**: Added Roger Luft (VeilWalker) / Webstorage branding and a "Help & About" button in the header opening a descriptive modal with quick usage topics, author contacts, and a visually highlighted **Donate** button (with Copy Pix Key option).
+- **No Console Flashing**: Added `creationflags=subprocess.CREATE_NO_WINDOW` to all commands executed in Windows via the `subprocess` module, completely stopping cmd/powershell windows from flashing.
+- **Double-compile Release Chain**: Modified `build.py` to chain compile the main application followed by the installer bundling the app binary.
+
 ## [0.1.1] - 2026-06-20
 ### Added
 - Configured GitHub Actions release workflow (`.github/workflows/release.yml`) to automatically compile the standalone Windows `.exe` executable via PyInstaller and upload it as a release asset when pushing a version tag (e.g. `v*`).

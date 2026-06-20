@@ -36,11 +36,13 @@ python main.py
 
 ## Compilation
 
-To compile to a standalone `.exe`:
+To compile the binaries:
 ```bash
 python build.py
 ```
-This generates a single executable under the `dist` folder.
+This generates two files in the `dist` folder:
+1. `fzportproxy.exe` - The standalone UAC-elevated application.
+2. `setup_fzportproxy.exe` - The graphical setup installer that bundles the main application, allows selecting the installation directory, and registers it to run automatically with Windows.
 
 ## Releases and CI/CD
 
@@ -48,17 +50,17 @@ This project uses GitHub Actions to automate compilation and release generation.
 
 ### Automated Releases (via Tags)
 
-To create a new release and automatically build/attach the Windows executable:
+To create a new release and automatically build and upload both executables:
 
-1. Draft a new tag locally (e.g. `v0.1.1`):
+1. Draft a new tag locally (e.g. `v1.0.0`):
    ```bash
-   git tag v0.1.1
+   git tag v1.0.0
    ```
 2. Push the tag to GitHub:
    ```bash
-   git push origin v0.1.1
+   git push origin v1.0.0
    ```
-This automatically triggers the **Build and Release** workflow on GitHub Actions. It will compile `fzportproxy.exe` on a Windows runner and publish it as a release asset under a new GitHub Release with the name of the tag.
+This automatically triggers the **Build and Release** workflow on GitHub Actions. It will compile both `fzportproxy.exe` and `setup_fzportproxy.exe` on a Windows runner and publish them as release assets under a new GitHub Release matching the tag name.
 
 ### Manual Builds (via GitHub UI)
 
@@ -66,4 +68,4 @@ You can also trigger a manual build on any branch:
 1. Navigate to the **Actions** tab in your GitHub repository.
 2. Select the **Build and Release** workflow.
 3. Click **Run workflow**, select the branch, and click the run button.
-4. Once completed, you can download the compiled `fzportproxy-exe` zip archive directly from the workflow run artifacts.
+4. Once completed, you can download the compiled `fzportproxy-builds` zip archive containing both executables directly from the workflow run artifacts.
