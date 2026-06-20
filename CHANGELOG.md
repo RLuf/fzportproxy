@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-06-20
+### Added
+- Configured GitHub Actions release workflow (`.github/workflows/release.yml`) to automatically compile the standalone Windows `.exe` executable via PyInstaller and upload it as a release asset when pushing a version tag (e.g. `v*`).
+- Configured run artifact uploading in GitHub Actions to retrieve the built executable from manual workflow runs.
+- Updated documentation with step-by-step instructions for publishing releases.
+
 ## [0.1.0] - 2026-06-20
 ### Added
 - Project initialization.

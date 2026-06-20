@@ -41,3 +41,29 @@ To compile to a standalone `.exe`:
 python build.py
 ```
 This generates a single executable under the `dist` folder.
+
+## Releases and CI/CD
+
+This project uses GitHub Actions to automate compilation and release generation.
+
+### Automated Releases (via Tags)
+
+To create a new release and automatically build/attach the Windows executable:
+
+1. Draft a new tag locally (e.g. `v0.1.1`):
+   ```bash
+   git tag v0.1.1
+   ```
+2. Push the tag to GitHub:
+   ```bash
+   git push origin v0.1.1
+   ```
+This automatically triggers the **Build and Release** workflow on GitHub Actions. It will compile `fzportproxy.exe` on a Windows runner and publish it as a release asset under a new GitHub Release with the name of the tag.
+
+### Manual Builds (via GitHub UI)
+
+You can also trigger a manual build on any branch:
+1. Navigate to the **Actions** tab in your GitHub repository.
+2. Select the **Build and Release** workflow.
+3. Click **Run workflow**, select the branch, and click the run button.
+4. Once completed, you can download the compiled `fzportproxy-exe` zip archive directly from the workflow run artifacts.
