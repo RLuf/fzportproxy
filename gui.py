@@ -892,15 +892,15 @@ Important: This application MUST be run as Administrator because 'netsh', Window
         ctk.CTkLabel(donate_frame, text="Donate / Apoie o Projeto", font=ctk.CTkFont(size=14, weight="bold"), text_color="#e74c3c").pack(anchor="w", padx=15, pady=5)
         ctk.CTkLabel(donate_frame, text="Se este utilitário te economizou tempo e facilitou seu desenvolvimento com WSL,\nconsidere fazer uma contribuição! Qualquer valor ajuda muito.", justify="left").pack(anchor="w", padx=15, pady=5)
         
-        pix_key = "eu@rogerluft.com.br"
+        pix_key = "51992452539"
         
         def copy_pix():
             self.clipboard_clear()
             self.clipboard_append(pix_key)
             self.update()
-            messagebox.showinfo("Pix Copiado", "Chave Pix copiada para a área de transferência:\neu@rogerluft.com.br")
+            messagebox.showinfo("Pix Copiado", "Chave Pix copiada para a área de transferência:\n51992452539")
             
-        pix_btn = ctk.CTkButton(donate_frame, text="Copiar Chave Pix (E-mail)", fg_color="#e74c3c", hover_color="#c0392b", command=copy_pix)
+        pix_btn = ctk.CTkButton(donate_frame, text="Copiar Chave Pix (Celular)", fg_color="#e74c3c", hover_color="#c0392b", command=copy_pix)
         pix_btn.pack(pady=10)
 
     def save_interval_action(self):
