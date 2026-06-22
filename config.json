@@ -1,0 +1,7 @@
+{
+    "auto_sync": true,
+    "sync_interval": 10,
+    "auto_firewall": true,
+    "dynamic_rules": [],
+    "dynamic_hosts": {}
+}

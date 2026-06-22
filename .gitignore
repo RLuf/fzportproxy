@@ -3,7 +3,9 @@ __pycache__/
 build/
 dist/
 *.spec
-config.json
 .codesign/
+sign-pass.cfg
 *.build/
 *.onefile-build/
+build_admin.log
+AGENTS.md

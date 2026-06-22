@@ -1,6 +1,36 @@
+---
+{
+  "id": "file_z80y48ri",
+  "filetype": "document",
+  "filename": "CHANGELOG",
+  "created_at": "2026-06-21T00:56:26.818Z",
+  "updated_at": "2026-06-21T00:56:26.818Z",
+  "meta": {
+    "location": "/",
+    "tags": [],
+    "categories": [],
+    "description": "",
+    "source": "markdown"
+  }
+}
+---
 # Changelog - fzportproxy
 
 All notable changes to this project will be documented in this file.
+
+## [1.2.0] - 2026-06-21
+### Added
+- **Language Toggle (PT/EN)**: Added full Portuguese/English internationalization (i18n) support. A language selector in the Settings tab allows switching between languages. The application requires a restart after changing the language. All UI labels, dialogs, log messages, and help content are now localized.
+- **Rule Persistence Info Label**: Added an informational label below the port forwarding rules table: "Rules remain active until changed. FZPortProxy can be closed and reopened at any time." (localized in both languages). Also added to the Help modal documentation.
+- **Secure Password Management for Code Signing (`sign.py`)**: The PFX password is now loaded using a 3-tier resolution chain: (1) environment variable `FZ_CODESIGN_PASSWORD`, (2) local `sign-pass.cfg` file (gitignored), (3) hardcoded default fallback. A message is printed indicating which source was used.
+- **`sign-pass.cfg`**: New gitignored local file for storing the code signing password on developer machines.
+
+### Changed
+- **`gui.py`**: Complete refactor — all hardcoded string literals replaced with a `STRINGS` dictionary supporting `"en"` and `"pt"` language keys. Language preference is persisted in `config.json`.
+- **`sign.py`**: Password is no longer hardcoded as the sole source; supports environment variable and local file overrides.
+- **`.gitignore`**: Added `sign-pass.cfg` entry.
+- **`config.json`**: Added `"language"` key (default: `"en"`).
+- **`requirements.txt`**: Added `zstandard` dependency to enable Nuitka onefile compilation compression.
 
 ## [1.1.0] - 2026-06-20
 ### Fixed

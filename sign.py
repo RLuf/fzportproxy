@@ -25,7 +25,35 @@ CERT_FRIENDLY_NAME = "FZPortProxy Code Signing"
 CERT_STORE = r"Cert:\CurrentUser\My"
 PFX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".codesign")
 PFX_PATH = os.path.join(PFX_DIR, "fzportproxy_sign.pfx")
-PFX_PASSWORD = "FZPortProxy2026!"  # Change for production use
+PFX_PASSWORD_DEFAULT = "FZPortProxy2026!"  # Public fallback for CI/dev builds
+PFX_PASSWORD_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sign-pass.cfg")
+
+
+def load_pfx_password():
+    """Load PFX password from environment variable, local file, or hardcoded default."""
+    # 1. Environment variable (highest priority — for CI or secure setups)
+    env_pass = os.environ.get("FZ_CODESIGN_PASSWORD")
+    if env_pass:
+        print("[PASSWORD] Using password from environment variable FZ_CODESIGN_PASSWORD")
+        return env_pass
+
+    # 2. Local file sign-pass.cfg (gitignored — for developer machines)
+    if os.path.exists(PFX_PASSWORD_FILE):
+        try:
+            with open(PFX_PASSWORD_FILE, "r", encoding="utf-8") as f:
+                file_pass = f.read().strip()
+            if file_pass:
+                print(f"[PASSWORD] Using password from local file: {PFX_PASSWORD_FILE}")
+                return file_pass
+        except Exception as e:
+            print(f"[PASSWORD] Warning: Failed to read {PFX_PASSWORD_FILE}: {e}")
+
+    # 3. Hardcoded default (public fallback)
+    print("[PASSWORD] Using default hardcoded password (for development/CI use)")
+    return PFX_PASSWORD_DEFAULT
+
+
+PFX_PASSWORD = load_pfx_password()
 
 # Timestamp server for the signature
 TIMESTAMP_URL = "http://timestamp.digicert.com"

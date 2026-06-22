@@ -107,7 +107,9 @@ def build_executable(script, output_name, extra_args=None):
         "--onefile",
         "--enable-plugin=tk-inter",
         "--windows-console-mode=disable",
-        "--windows-uac-admin",
+        # NOTE: UAC elevation is handled at runtime in main.py via wm.run_as_admin_relaunch()
+        # --windows-uac-admin removed: it embeds a requireAdministrator manifest which causes
+        # Windows to lock the intermediate exe, blocking the onefile linker from overwriting it.
         "--include-package=customtkinter",
         "--include-package=PIL",
         "--include-package=pystray",
@@ -116,7 +118,11 @@ def build_executable(script, output_name, extra_args=None):
         f"--output-dir=dist",
         "--remove-output",  # Clean intermediate build folder
         "--assume-yes-for-downloads",  # Auto-accept any dependency downloads
+        "--lto=no",  # Disable LTO to avoid out-of-memory on linker
     ]
+
+    # Add icon via rcedit (post-build, avoids PermissionError with UAC exes)
+    # icon is added after compilation via post_build_icon()
 
     # Add customtkinter data files (themes/assets)
     ctk_path = get_package_path("customtkinter")
@@ -129,6 +135,29 @@ def build_executable(script, output_name, extra_args=None):
     cmd.append(script)
 
     return cmd
+
+
+def post_build_icon(exe_path):
+    """Add icon to exe using rcedit (avoids Nuitka UAC+icon PermissionError)."""
+    icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+    rcedit_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcedit.exe")
+    if not os.path.exists(rcedit_path):
+        print("  [WARN] rcedit.exe not found, skipping icon injection.")
+        return
+    if not os.path.exists(icon_path):
+        print("  [WARN] icon.ico not found, skipping icon injection.")
+        return
+    try:
+        result = subprocess.run(
+            [rcedit_path, exe_path, "--set-icon", icon_path],
+            capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            print(f"  [OK] Icon added to {os.path.basename(exe_path)}")
+        else:
+            print(f"  [WARN] rcedit failed: {result.stderr.strip()}")
+    except Exception as e:
+        print(f"  [WARN] Icon injection error: {e}")
 
 
 def run_build(cmd, step_name):
@@ -179,6 +208,8 @@ def build():
         print(f"ERROR: {main_exe_path} was not created.")
         sys.exit(1)
 
+    post_build_icon(main_exe_path)
+
     # 4. Build Installer (embedding the main exe)
     installer_name = f"setup_fzportproxy_v{APP_VERSION}.exe"
     extra_installer_args = [
@@ -187,6 +218,7 @@ def build():
     cmd_installer = build_executable("installer.py", installer_name, extra_installer_args)
     if not run_build(cmd_installer, f"STEP 2: Building Installer ({installer_name})"):
         sys.exit(1)
+    post_build_icon(os.path.join("dist", installer_name))
 
     # 5. Summary
     print(f"""

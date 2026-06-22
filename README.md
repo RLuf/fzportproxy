@@ -105,3 +105,23 @@ The application version is centralized in [`version.py`](version.py). To release
 1. Update `APP_VERSION` in `version.py`
 2. Update `CHANGELOG.md`
 3. Commit, tag, and push
+
+## Code Signing Password Management
+
+The code signing password (`sign.py`) is resolved using a 3-tier chain:
+
+1. **Environment variable** `FZ_CODESIGN_PASSWORD` — highest priority, ideal for CI/CD secrets
+2. **Local file** `sign-pass.cfg` — a single-line plain text file in the project root (gitignored), ideal for developer machines
+3. **Hardcoded default** — `FZPortProxy2026!`, the public fallback for development/CI builds
+
+A message is printed indicating which source was used when running `python sign.py`.
+
+## Language / Internationalization
+
+FZPortProxy supports **English** and **Portuguese** interfaces. The language can be switched from the **Settings** tab via the "Language / Idioma" dropdown. A restart is required after changing the language.
+
+The language preference is persisted in `config.json` under the `"language"` key (`"en"` or `"pt"`).
+
+## Rule Persistence
+
+Port forwarding rules and hostname mappings are managed at the Windows system level (`netsh interface portproxy` and the `hosts` file). This means **rules remain active until changed** — FZPortProxy can be closed and reopened at any time without losing your configuration.
