@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Roger Luft (VeilWalker)
+# Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).
+# See LICENSE file in the project root for full license text.
+# https://creativecommons.org/licenses/by/4.0/
+
 """
 FZPortProxy Code Signing Script
 Generates a self-signed certificate and signs the compiled executables.

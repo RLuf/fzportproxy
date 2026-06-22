@@ -125,3 +125,7 @@ The language preference is persisted in `config.json` under the `"language"` key
 ## Rule Persistence
 
 Port forwarding rules and hostname mappings are managed at the Windows system level (`netsh interface portproxy` and the `hosts` file). This means **rules remain active until changed** — FZPortProxy can be closed and reopened at any time without losing your configuration.
+
+## License
+
+This project is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** License. See the [LICENSE](LICENSE) file for the full text.

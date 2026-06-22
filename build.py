@@ -1,3 +1,8 @@
+# Copyright (c) 2026 Roger Luft (VeilWalker)
+# Licensed under the Creative Commons Attribution 4.0 International License (CC BY 4.0).
+# See LICENSE file in the project root for full license text.
+# https://creativecommons.org/licenses/by/4.0/
+
 """
 FZPortProxy Build Script — Nuitka Compiler
 Compiles both the main application and the installer into standalone executables.

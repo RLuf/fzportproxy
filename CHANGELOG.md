@@ -18,6 +18,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-06-22
+### Added
+- **License**: Added Creative Commons Attribution 4.0 International (CC BY 4.0) license to the repository (`LICENSE` file) and as header comments in all Python source files.
+- **Documentation**: Updated `README.md` with a License section.
+
 ## [1.2.0] - 2026-06-21
 ### Added
 - **Language Toggle (PT/EN)**: Added full Portuguese/English internationalization (i18n) support. A language selector in the Settings tab allows switching between languages. The application requires a restart after changing the language. All UI labels, dialogs, log messages, and help content are now localized.
